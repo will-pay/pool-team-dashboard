@@ -14,21 +14,20 @@
 
         <nav class="tabs">
             <button class="tab-button active" data-tab="schedule">Schedule</button>
-            <button class="tab-button" data-tab="my-team">My Team</button>
+            <button class="tab-button" data-tab="my-team">Roster</button>
             <button class="tab-button" data-tab="other-teams">Other Teams</button>
         </nav>
 
         <!-- Schedule Tab -->
         <div id="schedule" class="tab-content active">
-            <h2>Team Schedule</h2>
             <div class="section">
                 <h3>Upcoming Matches</h3>
                 <table id="schedule-table">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Opponent</th>
                             <th>Rank</th>
+                            <th>Opponent</th>
                             <th>Location</th>
                             <th>Actions</th>
                         </tr>
@@ -40,7 +39,8 @@
             <div class="section">
                 <h3>Add Match</h3>
                 <form id="schedule-form">
-                    <input type="date" id="match-date" required>
+                    <input type="number" id="match-month" placeholder="Month (1-12)" min="1" max="12" required>
+                    <input type="number" id="match-day" placeholder="Day (1-31)" min="1" max="31" required>
                     <div class="autocomplete-wrapper">
                         <input type="text" id="opponent" placeholder="Opponent Team" autocomplete="off" required>
                         <div id="opponent-dropdown" class="autocomplete-dropdown"></div>
@@ -53,19 +53,16 @@
 
         <!-- My Team Tab -->
         <div id="my-team" class="tab-content">
-            <h2>Sticks & Stoned - Team Roster</h2>
             <div class="section">
                 <h3>Team Roster & Rankings</h3>
                 <table id="players-table">
                     <thead>
                         <tr>
-                            <th>Rank</th>
-                            <th class="sortable" data-sort="name">Player Name</th>
-                            <th class="sortable" data-sort="skillLevel">Skill Level</th>
-                            <th class="sortable" data-sort="wins">Wins</th>
-                            <th class="sortable" data-sort="losses">Losses</th>
+                            <th class="sortable" data-sort="name">Name</th>
+                            <th class="sortable" data-sort="skillLevel">SL</th>
+                            <th class="sortable" data-sort="wins">W</th>
+                            <th class="sortable" data-sort="losses">L</th>
                             <th class="sortable" data-sort="winPct">Win %</th>
-                            <th class="sortable" data-sort="matches">Matches</th>
                             <th class="sortable" data-sort="avgPPM">Avg PPM</th>
                             <th>Actions</th>
                         </tr>
@@ -85,20 +82,10 @@
                     <button type="submit">Add Player</button>
                 </form>
             </div>
-            <div class="section">
-                <h3>Import Team from CSV</h3>
-                <div class="import-section">
-                    <input type="file" id="csv-file" accept=".csv">
-                    <button onclick="importCSV()">Import CSV</button>
-                    <button onclick="downloadTemplate()">Download Template</button>
-                </div>
-                <p class="help-text">CSV format: Player Name, Skill Level, Wins, Losses, Average PPM (0-2, e.g., 1.60)</p>
-            </div>
         </div>
 
         <!-- Other Teams Tab -->
         <div id="other-teams" class="tab-content">
-            <h2>Other Teams</h2>
             <div class="section">
                 <h3>League Standings</h3>
                 <table id="teams-table">

@@ -59,6 +59,12 @@ document.getElementById('schedule-form').addEventListener('submit', (e) => {
     e.preventDefault();
 
     const opponentName = document.getElementById('opponent').value;
+    const month = document.getElementById('match-month').value;
+    const day = document.getElementById('match-day').value;
+
+    // Construct date string with current year
+    const currentYear = new Date().getFullYear();
+    const dateString = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
     // Find matching team (case-insensitive)
     const matchingTeam = teamsData.find(team =>
@@ -67,9 +73,9 @@ document.getElementById('schedule-form').addEventListener('submit', (e) => {
 
     const match = {
         id: Date.now(),
-        date: document.getElementById('match-date').value,
+        date: dateString,
         opponent: opponentName,
-        opponentTeamId: matchingTeam ? matchingTeam.id : null, // NEW: Store team reference
+        opponentTeamId: matchingTeam ? matchingTeam.id : null,
         location: document.getElementById('location').value
     };
 
@@ -116,24 +122,24 @@ function renderSchedule() {
             );
         }
 
-        // Get team rank
+        // Get team rank (plain text, no badge styling)
         let rankDisplay = '-';
-        let rankClass = '';
         if (opponentTeam) {
             const rank = sortedTeams.findIndex(t => t.id === opponentTeam.id) + 1;
             if (rank > 0) {
-                if (rank === 1) rankClass = 'rank-gold';
-                else if (rank === 2) rankClass = 'rank-silver';
-                else if (rank === 3) rankClass = 'rank-bronze';
-                rankDisplay = `<span class="rank-badge ${rankClass}">${rank}</span>`;
+                rankDisplay = `#${rank}`;
             }
         }
 
+        // Format date as month/day only
+        const dateObj = parseLocalDate(match.date);
+        const dateDisplay = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
+
         return `
             <tr id="match-row-${match.id}">
-                <td>${parseLocalDate(match.date).toLocaleDateString()}</td>
-                <td>${opponentDisplay}</td>
+                <td>${dateDisplay}</td>
                 <td>${rankDisplay}</td>
+                <td>${opponentDisplay}</td>
                 <td>${match.location}</td>
                 <td>
                     <div class="action-buttons">
@@ -159,8 +165,8 @@ function editMatch(id) {
     const row = document.getElementById(`match-row-${id}`);
     row.classList.add('editing');
 
-    // Date is already in YYYY-MM-DD format, use it directly
-    const formattedDate = match.date;
+    // Extract month and day from date string
+    const [year, month, day] = match.date.split('-');
 
     // Get current team name by ID if available
     let opponentValue = match.opponent;
@@ -172,9 +178,12 @@ function editMatch(id) {
     }
 
     row.innerHTML = `
-        <td><input type="date" id="edit-match-date-${id}" value="${formattedDate}"></td>
-        <td><input type="text" id="edit-match-opponent-${id}" value="${opponentValue}"></td>
+        <td>
+            <input type="number" id="edit-match-month-${id}" value="${parseInt(month)}" min="1" max="12" style="width: 50px;">
+            <input type="number" id="edit-match-day-${id}" value="${parseInt(day)}" min="1" max="31" style="width: 50px;">
+        </td>
         <td></td>
+        <td><input type="text" id="edit-match-opponent-${id}" value="${opponentValue}"></td>
         <td><input type="text" id="edit-match-location-${id}" value="${match.location}"></td>
         <td>
             <div class="action-buttons">
@@ -186,25 +195,30 @@ function editMatch(id) {
 }
 
 function saveMatch(id) {
-    const date = document.getElementById(`edit-match-date-${id}`).value;
+    const month = document.getElementById(`edit-match-month-${id}`).value;
+    const day = document.getElementById(`edit-match-day-${id}`).value;
     const opponentName = document.getElementById(`edit-match-opponent-${id}`).value;
     const location = document.getElementById(`edit-match-location-${id}`).value;
 
-    if (!date || !opponentName || !location) {
+    if (!month || !day || !opponentName || !location) {
         alert('All fields are required');
         return;
     }
 
-    // NEW: Find matching team
+    // Construct date string with current year
+    const currentYear = new Date().getFullYear();
+    const dateString = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+    // Find matching team
     const matchingTeam = teamsData.find(team =>
         team.name.toLowerCase() === opponentName.toLowerCase()
     );
 
     const match = scheduleData.find(m => m.id === id);
     if (match) {
-        match.date = date;
+        match.date = dateString;
         match.opponent = opponentName;
-        match.opponentTeamId = matchingTeam ? matchingTeam.id : null; // NEW: Update team reference
+        match.opponentTeamId = matchingTeam ? matchingTeam.id : null;
         match.location = location;
 
         scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -261,7 +275,7 @@ function renderPlayers() {
     const tbody = document.getElementById('players-body');
 
     if (playersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-message">No players added</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-message">No players added</td></tr>';
         return;
     }
 
@@ -297,11 +311,6 @@ function renderPlayers() {
                 const bTotalGames = b.wins + b.losses;
                 aVal = aTotalGames > 0 ? (a.wins / aTotalGames) : 0;
                 bVal = bTotalGames > 0 ? (b.wins / bTotalGames) : 0;
-                break;
-
-            case 'matches':
-                aVal = a.matchesPlayed || 0;
-                bVal = b.matchesPlayed || 0;
                 break;
 
             case 'avgPPM':
@@ -346,13 +355,11 @@ function renderPlayers() {
 
         return `
             <tr id="player-row-${player.id}">
-                <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
                 <td><strong>${player.name}</strong></td>
                 <td><span class="skill-badge ${skillClass}">${player.skillLevel}</span></td>
                 <td>${player.wins}</td>
                 <td>${player.losses}</td>
                 <td><strong>${winPct}%</strong></td>
-                <td>${player.matchesPlayed}</td>
                 <td><strong class="ppg">${avgPPM}</strong></td>
                 <td>
                     <div class="action-buttons">
@@ -397,13 +404,11 @@ function editPlayer(id) {
     else if (index === 2) rankClass = 'rank-bronze';
 
     row.innerHTML = `
-        <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
         <td><input type="text" id="edit-name-${id}" value="${player.name}"></td>
         <td><input type="text" id="edit-skill-${id}" value="${player.skillLevel}"></td>
         <td><input type="text" id="edit-wins-${id}" value="${player.wins}"></td>
         <td><input type="text" id="edit-losses-${id}" value="${player.losses}"></td>
         <td><strong>${winPct}%</strong></td>
-        <td>${player.matchesPlayed}</td>
         <td><input type="text" id="edit-avgppm-${id}" value="${avgPPM}"></td>
         <td>
             <div class="action-buttons">
