@@ -1,3 +1,21 @@
+// Default Data (loads on first visit)
+const defaultData = {
+    scheduleData: [{"id":1773119213910,"date":"2026-03-11","opponent":"The Enablers","location":"aunt ginnys"},{"id":1773120127143,"date":"2026-03-18","opponent":"Pool Clurb","opponentTeamId":1773117926953,"location":"brooklyn billiards"},{"id":1773120169047,"date":"2026-03-25","opponent":"Off The Rails","opponentTeamId":1773117932949,"location":"aunt ginnys"},{"id":1773120305371,"date":"2026-04-01","opponent":"8 Ball Yips","opponentTeamId":1773117946061,"location":"brooklyn billiards"},{"id":1773120321846,"date":"2026-04-08","opponent":"Bank you baby","opponentTeamId":1773118117955,"location":"aunt ginnys"}],
+    playersData: [{"id":1773116598241,"name":"Will","skillLevel":4,"wins":10,"losses":8,"matchesPlayed":18,"avgPPM":2},{"id":1773116742822,"name":"Andrew","skillLevel":2,"wins":4,"losses":15,"matchesPlayed":19,"avgPPM":0.75},{"id":1773116808101,"name":"Will H","skillLevel":3,"wins":9,"losses":15,"matchesPlayed":24,"avgPPM":1.6},{"id":1773116888558,"name":"Noah","skillLevel":4,"wins":8,"losses":16,"matchesPlayed":24,"avgPPM":1.67},{"id":1773116909225,"name":"Scott","skillLevel":3,"wins":3,"losses":11,"matchesPlayed":14,"avgPPM":0.67},{"id":1773116925699,"name":"Sarah","skillLevel":2,"wins":7,"losses":14,"matchesPlayed":21,"avgPPM":1.6},{"id":1773116939658,"name":"Jacob","skillLevel":3,"wins":9,"losses":13,"matchesPlayed":22,"avgPPM":1.4},{"id":1773116952207,"name":"Max","skillLevel":4,"wins":5,"losses":11,"matchesPlayed":16,"avgPPM":1.4}],
+    teamsData: [{"id":1773117849067,"name":"H8 it or love it","points":88},{"id":1773117860325,"name":"Gently, pool out","points":87},{"id":1773117867120,"name":"Rack ball","points":85},{"id":1773117873962,"name":"The Enablers","points":78},{"id":1773117879883,"name":"Beer in Hand","points":74},{"id":1773117890625,"name":"Cutie Pies","points":74},{"id":1773117902166,"name":"The Crazy 8's","points":68},{"id":1773117912783,"name":"Barracuedas","points":66},{"id":1773118117955,"name":"Bank you baby","points":66},{"id":1773117803699,"name":"Sticks & Stoned","points":65},{"id":1773117919979,"name":"Gimme A Break","points":64},{"id":1773117926953,"name":"Pool Clurb","points":57},{"id":1773117932949,"name":"Off The Rails","points":56},{"id":1773117939920,"name":"Top Corner, Lovely","points":48},{"id":1773117946061,"name":"8 Ball Yips","points":43},{"id":1773117951936,"name":"8 Balls Deep","points":22}]
+};
+
+// Initialize localStorage with default data if empty
+if (!localStorage.getItem('scheduleData')) {
+    localStorage.setItem('scheduleData', JSON.stringify(defaultData.scheduleData));
+}
+if (!localStorage.getItem('playersData')) {
+    localStorage.setItem('playersData', JSON.stringify(defaultData.playersData));
+}
+if (!localStorage.getItem('teamsData')) {
+    localStorage.setItem('teamsData', JSON.stringify(defaultData.teamsData));
+}
+
 // Data Storage
 let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || [];
 let playersData = JSON.parse(localStorage.getItem('playersData')) || [];
