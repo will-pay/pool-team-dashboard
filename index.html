@@ -39,8 +39,10 @@
             <div class="section">
                 <h3>Add Match</h3>
                 <form id="schedule-form">
-                    <input type="number" id="match-month" placeholder="Month (1-12)" min="1" max="12" required>
-                    <input type="number" id="match-day" placeholder="Day (1-31)" min="1" max="31" required>
+                    <div class="date-inputs">
+                        <input type="number" id="match-month" placeholder="MM" min="1" max="12" required>
+                        <input type="number" id="match-day" placeholder="DD" min="1" max="31" required>
+                    </div>
                     <div class="autocomplete-wrapper">
                         <input type="text" id="opponent" placeholder="Opponent Team" autocomplete="off" required>
                         <div id="opponent-dropdown" class="autocomplete-dropdown"></div>
