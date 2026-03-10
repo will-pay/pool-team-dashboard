@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pool Team Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎱 Sticks & Stoned Dashboard</h1>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="schedule">Schedule</button>
+            <button class="tab-button" data-tab="my-team">My Team</button>
+            <button class="tab-button" data-tab="other-teams">Other Teams</button>
+        </nav>
+
+        <!-- Schedule Tab -->
+        <div id="schedule" class="tab-content active">
+            <h2>Team Schedule</h2>
+            <div class="section">
+                <h3>Upcoming Matches</h3>
+                <table id="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Rank</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h3>Add Match</h3>
+                <form id="schedule-form">
+                    <input type="date" id="match-date" required>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" id="opponent" placeholder="Opponent Team" autocomplete="off" required>
+                        <div id="opponent-dropdown" class="autocomplete-dropdown"></div>
+                    </div>
+                    <input type="text" id="location" placeholder="Location" required>
+                    <button type="submit">Add Match</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Team Tab -->
+        <div id="my-team" class="tab-content">
+            <h2>Sticks & Stoned - Team Roster</h2>
+            <div class="section">
+                <h3>Team Roster & Rankings</h3>
+                <table id="players-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th class="sortable" data-sort="name">Player Name</th>
+                            <th class="sortable" data-sort="skillLevel">Skill Level</th>
+                            <th class="sortable" data-sort="wins">Wins</th>
+                            <th class="sortable" data-sort="losses">Losses</th>
+                            <th class="sortable" data-sort="winPct">Win %</th>
+                            <th class="sortable" data-sort="matches">Matches</th>
+                            <th class="sortable" data-sort="avgPPM">Avg PPM</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="players-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h3>Add Player Manually</h3>
+                <form id="player-form">
+                    <input type="text" id="player-name" placeholder="Player Name" required>
+                    <input type="number" id="skill-level" placeholder="Skill Level (2-8)" min="2" max="8" step="1" required>
+                    <input type="number" id="player-wins" placeholder="Wins" min="0" required>
+                    <input type="number" id="player-losses" placeholder="Losses" min="0" required>
+                    <input type="number" id="avg-ppm" placeholder="Average PPM (0-2)" min="0" max="2" step="0.01" required>
+                    <button type="submit">Add Player</button>
+                </form>
+            </div>
+            <div class="section">
+                <h3>Import Team from CSV</h3>
+                <div class="import-section">
+                    <input type="file" id="csv-file" accept=".csv">
+                    <button onclick="importCSV()">Import CSV</button>
+                    <button onclick="downloadTemplate()">Download Template</button>
+                </div>
+                <p class="help-text">CSV format: Player Name, Skill Level, Wins, Losses, Average PPM (0-2, e.g., 1.60)</p>
+            </div>
+        </div>
+
+        <!-- Other Teams Tab -->
+        <div id="other-teams" class="tab-content">
+            <h2>Other Teams</h2>
+            <div class="section">
+                <h3>League Standings</h3>
+                <table id="teams-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team Name</th>
+                            <th>Total Points</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teams-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h3>Add/Update Team</h3>
+                <form id="team-form">
+                    <input type="text" id="team-name" placeholder="Team Name" required>
+                    <input type="number" id="team-points" placeholder="Total Points" min="0" required>
+                    <button type="submit">Add Team</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
