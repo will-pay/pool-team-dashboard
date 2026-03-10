@@ -276,8 +276,8 @@ button.cancel:hover {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.2em;
-    padding: 8px 10px;
+    font-size: 1.1em;
+    padding: 6px 8px;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -324,7 +324,7 @@ button.cancel:hover {
 
 .action-buttons {
     display: flex;
-    gap: 5px;
+    gap: 2px;
     align-items: center;
 }
 
@@ -343,7 +343,7 @@ thead {
 }
 
 th, td {
-    padding: 15px;
+    padding: 12px 15px;
     text-align: left;
 }
 
@@ -515,54 +515,174 @@ input[type="file"]::file-selector-button:hover {
     font-size: 1.1em;
 }
 
-/* Make Avg PPM column narrower (6th column in players table) */
-#players-table th:nth-child(6),
-#players-table td:nth-child(6) {
-    width: 80px;
-    white-space: nowrap;
+/* ===== SCHEDULE TABLE COLUMN WIDTHS ===== */
+/* Make schedule table only as wide as needed */
+#schedule-table {
+    width: auto;
 }
 
-/* Schedule Table Column Widths */
+/* Date column - fits "12/31" */
 #schedule-table th:nth-child(1),
 #schedule-table td:nth-child(1) {
-    width: 45px;
+    width: 1px;
     white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
+/* Rank column - fits "#15" */
 #schedule-table th:nth-child(2),
 #schedule-table td:nth-child(2) {
-    width: 50px;
+    width: 1px;
     text-align: center;
+    white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
+/* Opponent column - fits content */
 #schedule-table th:nth-child(3),
 #schedule-table td:nth-child(3) {
-    width: 1%;
+    width: 1px;
     white-space: nowrap;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
 }
 
+/* Location column - fits content */
 #schedule-table th:nth-child(4),
 #schedule-table td:nth-child(4) {
-    width: 120px;
+    width: 1px;
+    white-space: nowrap;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
 }
 
-/* Teams Table Column Widths - Make narrow to fit without scroll */
+/* Actions column - fits two icon buttons */
+#schedule-table th:nth-child(5),
+#schedule-table td:nth-child(5) {
+    width: 1px;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* ===== ROSTER TABLE COLUMN WIDTHS ===== */
+/* Make roster table only as wide as needed */
+#players-table {
+    width: auto;
+}
+
+/* Name column - fits content */
+#players-table th:nth-child(1),
+#players-table td:nth-child(1) {
+    width: 1px;
+    white-space: nowrap;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+}
+
+/* SL column - fits single digit with badge */
+#players-table th:nth-child(2),
+#players-table td:nth-child(2) {
+    width: 1px;
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* W column - fits 1-3 digits */
+#players-table th:nth-child(3),
+#players-table td:nth-child(3) {
+    width: 1px;
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+/* L column - fits 1-3 digits */
+#players-table th:nth-child(4),
+#players-table td:nth-child(4) {
+    width: 1px;
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+/* Win % column - fits "100.0%" */
+#players-table th:nth-child(5),
+#players-table td:nth-child(5) {
+    width: 1px;
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* Avg PPM column - fits "2.00" */
+#players-table th:nth-child(6),
+#players-table td:nth-child(6) {
+    width: 1px;
+    text-align: center;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* Actions column - fits two icon buttons */
+#players-table th:nth-child(7),
+#players-table td:nth-child(7) {
+    width: 1px;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
+/* ===== TEAMS TABLE COLUMN WIDTHS ===== */
+/* Make teams table only as wide as needed */
+#teams-table {
+    width: auto;
+}
+
+/* Rank column - fits rank badge with 1-2 digit number */
 #teams-table th:nth-child(1),
 #teams-table td:nth-child(1) {
-    width: 50px;
+    width: 1px;
     text-align: center;
+    white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
+/* Team Name column - fits content */
 #teams-table th:nth-child(2),
 #teams-table td:nth-child(2) {
-    width: auto;
+    width: 1px;
     white-space: nowrap;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
 }
 
+/* Total Points column - fits 1-3 digits */
 #teams-table th:nth-child(3),
 #teams-table td:nth-child(3) {
-    width: 70px;
+    width: 1px;
     text-align: center;
+    white-space: nowrap;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+/* Actions column - fits two icon buttons */
+#teams-table th:nth-child(4),
+#teams-table td:nth-child(4) {
+    width: 1px;
+    white-space: nowrap;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
 }
 
 @media (max-width: 768px) {
@@ -638,17 +758,29 @@ input[type="file"]::file-selector-button:hover {
 
     table {
         font-size: 0.85em;
-        min-width: 600px; /* Ensure table doesn't collapse */
+        width: auto; /* Let tables size to content */
     }
 
-    /* Teams table should fit without scrolling */
+    /* Remove min-width constraints to allow content-based sizing */
+    #schedule-table,
+    #players-table,
     #teams-table {
-        min-width: 100%;
+        width: auto;
     }
 
     th, td {
-        padding: 10px 8px;
+        padding: 8px 6px;
         white-space: nowrap;
+    }
+
+    /* Override specific column padding on mobile */
+    #schedule-table th,
+    #schedule-table td,
+    #players-table th,
+    #players-table td,
+    #teams-table th,
+    #teams-table td {
+        padding: 8px 6px !important;
     }
 
     /* Smaller action buttons on mobile */
@@ -723,16 +855,28 @@ input[type="file"]::file-selector-button:hover {
     /* Table optimizations for very small screens */
     table {
         font-size: 0.75em;
-        min-width: 550px;
+        width: auto; /* Let tables size to content */
     }
 
-    /* Teams table should fit without scrolling */
+    /* Remove min-width constraints to allow content-based sizing */
+    #schedule-table,
+    #players-table,
     #teams-table {
-        min-width: 100%;
+        width: auto;
     }
 
     th, td {
-        padding: 8px 5px;
+        padding: 6px 4px;
+    }
+
+    /* Override specific column padding on extra small mobile */
+    #schedule-table th,
+    #schedule-table td,
+    #players-table th,
+    #players-table td,
+    #teams-table th,
+    #teams-table td {
+        padding: 6px 4px !important;
     }
 
     th {
