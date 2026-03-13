@@ -61,13 +61,21 @@ pool-team-dashboard/
 ## Key Features
 
 ### 1. Schedule Management (Tab 1)
-- **View** upcoming matches with date, opponent, location, league ranking
+- **Card-based layout** displaying matches with opponent name, date, location, and rank badge
+- **Player assignment** - Inline player selection (4-5 players per match):
+  - Click **+ button** to show dropdown of available players
+  - Click player name to add instantly (auto-saves)
+  - Click player pill to toggle selection (green highlight with X)
+  - Click **X** on selected pill to remove player
+  - Prevents duplicate assignments
+  - Shows assigned players as pill badges
 - **Add** new matches with date picker, opponent autocomplete, location input
-- **Edit/Delete** existing matches inline
-- **Sorting** chronological by date
+- **Edit** match details (opponent, date, location) in expandable inline panel
+- **Delete** matches via three-dot menu (⋯)
 - **Autocomplete** opponent names from league standings
+- **Debounced auto-save** - All changes batch to single GitHub sync for performance
 
-**Location**: `index.html` lines 32-68, `script.js` renderSchedule() at ~line 200
+**Location**: `index.html` lines 32-68, `script.js` renderSchedule() at ~line 84
 
 ### 2. Roster Management - My Team (Tab 2)
 - **Display** 8 team players with full statistics:
@@ -95,13 +103,14 @@ pool-team-dashboard/
 **Location**: `index.html` lines 115-153, `script.js` renderTeams() at ~line 450
 
 ### 4. Automatic Data Persistence
-- **GitHub API sync** - Automatic commits on every data change
-- **localStorage cache** - Immediate saves, works offline
+- **Debounced GitHub sync** - Batches rapid changes into single API call (1.5s delay)
+- **Instant localStorage** - Immediate saves to local cache, works offline
+- **Performance optimized** - Adding 5 players = 1 GitHub sync instead of 5
 - **Version control** - Full history of all changes in Git
 - **Cross-device sync** - Latest data loaded on page refresh
 - **Graceful degradation** - Falls back to localStorage if GitHub unavailable
 
-**Location**: `github-sync.js` all lines
+**Location**: `github-sync.js` all lines, `script.js` debounced save functions
 
 ---
 
@@ -114,7 +123,8 @@ pool-team-dashboard/
   date: "YYYY-MM-DD",        // Match date
   opponent: "Team Name",      // Opponent team name
   opponentTeamId: teamId,     // Link to team in standings
-  location: "Venue"          // Location/venue name
+  location: "Venue",         // Location/venue name
+  assignedPlayers: [id1, id2] // Array of player IDs (4-5 players)
 }
 ```
 
@@ -341,23 +351,26 @@ Other Device → Page Load → Fetch from GitHub → Update Local State → Rend
 - Lines 115-153: League standings (Other Teams) tab structure
 - Lines 122-127: Script tags for github-sync.js and script.js
 
-### `script.js` (943 lines, 33.9 KB)
-- Lines 1-50: Global state and initialization
-- Lines 51-150: Default data definitions
-- Lines 151-250: Schedule management functions
-- Lines 251-450: Player management functions
-- Lines 451-650: Team management functions
-- Lines 651-750: Utility functions (sorting, autocomplete)
-- Lines 751-850: Math expression evaluator
-- Lines 851-943: Event listeners and initialization
+### `script.js` (~1350 lines, 48 KB)
+- Lines 1-20: Global state, debounce function for GitHub saves
+- Lines 21-70: Default data definitions
+- Lines 84-170: Schedule rendering (card-based layout)
+- Lines 171-270: Match editing and menu functions
+- Lines 450-650: Inline player assignment functions (add/remove players)
+- Lines 270-450: Player roster management
+- Lines 650-850: Team standings management
+- Lines 850-950: Utility functions (sorting, autocomplete)
+- Lines 950-1050: Math expression evaluator
+- Lines 1050-1350: Event listeners and initialization
 
-### `styles.css` (1043 lines, 20.1 KB)
+### `styles.css` (~900 lines, 27.5 KB)
 - Lines 1-100: CSS variables, resets, global styles
 - Lines 101-300: Layout (container, header, tabs)
-- Lines 301-600: Table styles (headers, rows, sorting indicators)
-- Lines 601-800: Form styles (inputs, buttons, badges)
-- Lines 801-900: Autocomplete dropdown
-- Lines 901-1043: Responsive media queries
+- Lines 301-450: Match card styles (card layout, headers, menus)
+- Lines 451-550: Player pill styles (removable pills, + button, dropdown)
+- Lines 551-700: Table styles (roster and standings tables)
+- Lines 701-800: Form styles (inputs, buttons, badges, edit panels)
+- Lines 801-900: Responsive media queries
 
 ### `github-sync.js` (~200 lines)
 - Lines 1-10: GitHub repository configuration
@@ -398,11 +411,13 @@ Requires:
 
 ## Performance Considerations
 
-- **No external frameworks**: Minimal bundle size (~60 KB total)
+- **No external frameworks**: Minimal bundle size (~76 KB total)
+- **Debounced GitHub saves**: Batches rapid edits into single API call (1.5s delay)
 - **localStorage cache**: Instant saves, reduces API calls
+- **Selective re-rendering**: Only updates changed match cards, not entire schedule
 - **Event delegation**: Minimizes event listeners
 - **CSS Grid/Flexbox**: Efficient responsive layouts
-- **GitHub API**: Efficient JSON-based data transfer
+- **Optimized dropdowns**: No filtering overhead, shows all players
 
 ---
 

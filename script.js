@@ -13,6 +13,27 @@ let teamsData = [];
 // Sorting state
 let currentSort = { column: 'avgPPM', direction: 'desc' };
 
+// Debounce timer for GitHub saves
+let githubSaveTimer = null;
+
+// Debounce function - delays execution until after wait time has elapsed since last call
+function debounce(func, wait) {
+    return function executedFunction(...args) {
+        clearTimeout(githubSaveTimer);
+        githubSaveTimer = setTimeout(() => func(...args), wait);
+    };
+}
+
+// Debounced GitHub save function (1.5 second delay)
+const debouncedGitHubSave = debounce(async (schedule, players, teams) => {
+    try {
+        await saveAllDataToGitHub(schedule, players, teams);
+        console.log('Changes synced to GitHub');
+    } catch (error) {
+        console.error('Failed to save data to GitHub:', error);
+    }
+}, 1500);
+
 // Tab Switching
 document.querySelectorAll('.tab-button').forEach(button => {
     button.addEventListener('click', () => {
@@ -82,17 +103,17 @@ function parseLocalDate(dateString) {
 }
 
 function renderSchedule() {
-    const tbody = document.getElementById('schedule-body');
+    const container = document.getElementById('schedule-cards');
 
     if (scheduleData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-message">No matches scheduled</td></tr>';
+        container.innerHTML = '<div class="empty-message">No matches scheduled</div>';
         return;
     }
 
     // Sort teams by points to get rankings
     const sortedTeams = [...teamsData].sort((a, b) => (b.points || 0) - (a.points || 0));
 
-    tbody.innerHTML = scheduleData.map(match => {
+    container.innerHTML = scheduleData.map(match => {
         // Look up current team name by ID
         let opponentDisplay = match.opponent; // Default to stored string
         let opponentTeam = null;
@@ -111,7 +132,7 @@ function renderSchedule() {
             );
         }
 
-        // Get team rank (plain text, no badge styling)
+        // Get team rank
         let rankDisplay = '-';
         if (opponentTeam) {
             const rank = sortedTeams.findIndex(t => t.id === opponentTeam.id) + 1;
@@ -124,35 +145,86 @@ function renderSchedule() {
         const dateObj = parseLocalDate(match.date);
         const dateDisplay = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
 
+        // Filter out deleted players from assigned players
+        const validAssignedPlayers = (match.assignedPlayers || []).filter(playerId =>
+            playersData.some(p => p.id === playerId)
+        );
+
+        // Get player names for display
+        const playerPills = validAssignedPlayers
+            .map(playerId => {
+                const player = playersData.find(p => p.id === playerId);
+                return player ? `<span class="player-pill-removable" data-player-id="${playerId}" onclick="showRemoveOption(${match.id}, ${playerId}, event)">${player.name}</span>` : '';
+            })
+            .filter(pill => pill !== '')
+            .join('');
+
         return `
-            <tr id="match-row-${match.id}">
-                <td>${dateDisplay}</td>
-                <td>${rankDisplay}</td>
-                <td>${opponentDisplay}</td>
-                <td>${match.location}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="icon-btn edit-icon" onclick="editMatch(${match.id})" title="Edit">✏️</button>
-                        <button class="icon-btn delete-icon" onclick="deleteMatch(${match.id})" title="Delete">🗑️</button>
+            <div class="match-card" id="match-card-${match.id}">
+                <div class="match-card-header">
+                    <span class="rank-badge-card">${rankDisplay}</span>
+                    <div class="match-menu">
+                        <button class="menu-btn" onclick="toggleMatchMenu(${match.id})">⋯</button>
+                        <div class="menu-dropdown" id="menu-${match.id}">
+                            <button onclick="editMatch(${match.id})">Edit</button>
+                            <button onclick="deleteMatch(${match.id})">Delete</button>
+                        </div>
                     </div>
-                </td>
-            </tr>
+                </div>
+                <h2 class="opponent-name">${opponentDisplay}</h2>
+                <div class="match-info">${dateDisplay} • ${match.location}</div>
+                <div class="player-pills-container" id="pills-container-${match.id}">
+                    ${playerPills}
+                    <div class="add-player-wrapper" id="add-wrapper-${match.id}">
+                        <button class="add-player-btn" onclick="showPlayerInput(${match.id})" id="add-btn-${match.id}">+</button>
+                    </div>
+                </div>
+            </div>
         `;
     }).join('');
 }
 
+function toggleMatchMenu(matchId) {
+    // Close all other menus
+    document.querySelectorAll('.menu-dropdown').forEach(menu => {
+        if (menu.id !== `menu-${matchId}`) {
+            menu.classList.remove('show');
+        }
+    });
+
+    // Toggle current menu
+    const menu = document.getElementById(`menu-${matchId}`);
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.match-menu')) {
+        document.querySelectorAll('.menu-dropdown').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
 function deleteMatch(id) {
-    scheduleData = scheduleData.filter(match => match.id !== id);
-    saveSchedule();
-    renderSchedule();
+    if (confirm('Delete this match?')) {
+        scheduleData = scheduleData.filter(match => match.id !== id);
+        saveSchedule();
+        renderSchedule();
+    }
 }
 
 function editMatch(id) {
     const match = scheduleData.find(m => m.id === id);
     if (!match) return;
 
-    const row = document.getElementById(`match-row-${id}`);
-    row.classList.add('editing');
+    // Close all menus and other panels
+    document.querySelectorAll('.menu-dropdown').forEach(menu => menu.classList.remove('show'));
+    document.querySelectorAll('.assignment-panel-container').forEach(panel => panel.remove());
+    document.querySelectorAll('.edit-panel-container').forEach(panel => panel.remove());
+    document.querySelectorAll('.match-card.expanded').forEach(card => card.classList.remove('expanded'));
 
     // Extract month and day from date string
     const [year, month, day] = match.date.split('-');
@@ -166,31 +238,183 @@ function editMatch(id) {
         }
     }
 
-    row.innerHTML = `
-        <td>
-            <input type="number" id="edit-match-month-${id}" value="${parseInt(month)}" min="1" max="12" style="width: 50px;">
-            <input type="number" id="edit-match-day-${id}" value="${parseInt(day)}" min="1" max="31" style="width: 50px;">
-        </td>
-        <td></td>
-        <td><input type="text" id="edit-match-opponent-${id}" value="${opponentValue}"></td>
-        <td><input type="text" id="edit-match-location-${id}" value="${match.location}"></td>
-        <td>
-            <div class="action-buttons">
-                <button class="icon-btn save-icon" onclick="saveMatch(${id})" title="Save">✓</button>
-                <button class="icon-btn cancel-icon" onclick="cancelMatchEdit(${id})" title="Cancel">✕</button>
+    // Create edit panel
+    const matchCard = document.getElementById(`match-card-${id}`);
+    matchCard.classList.add('expanded');
+
+    const editPanel = document.createElement('div');
+    editPanel.className = 'edit-panel-container';
+    editPanel.id = `edit-panel-${id}`;
+    editPanel.innerHTML = `
+        <div class="assignment-panel">
+            <div class="assignment-header">
+                <h4>Edit Match Details</h4>
             </div>
-        </td>
+            <div class="edit-form">
+                <div class="form-group">
+                    <label>Opponent</label>
+                    <div class="autocomplete-wrapper-edit">
+                        <input type="text" id="edit-opponent-${id}" value="${opponentValue}" placeholder="Team name" autocomplete="off">
+                        <div id="edit-opponent-dropdown-${id}" class="autocomplete-dropdown"></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Month</label>
+                        <input type="number" id="edit-month-${id}" value="${parseInt(month)}" min="1" max="12" placeholder="MM">
+                    </div>
+                    <div class="form-group">
+                        <label>Day</label>
+                        <input type="number" id="edit-day-${id}" value="${parseInt(day)}" min="1" max="31" placeholder="DD">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="edit-location-${id}" value="${match.location}" placeholder="Location">
+                </div>
+            </div>
+            <div class="assignment-footer">
+                <span class="selection-counter" id="edit-error-${id}"></span>
+                <div class="action-buttons">
+                    <button class="save" onclick="saveMatchEdit(${id})">Save</button>
+                    <button class="cancel" onclick="cancelMatchEdit(${id})">Cancel</button>
+                </div>
+            </div>
+        </div>
     `;
+
+    // Insert after match card
+    matchCard.insertAdjacentElement('afterend', editPanel);
+
+    // Setup autocomplete for opponent field
+    setupEditAutocomplete(id);
 }
 
-function saveMatch(id) {
-    const month = document.getElementById(`edit-match-month-${id}`).value;
-    const day = document.getElementById(`edit-match-day-${id}`).value;
-    const opponentName = document.getElementById(`edit-match-opponent-${id}`).value;
-    const location = document.getElementById(`edit-match-location-${id}`).value;
+function setupEditAutocomplete(matchId) {
+    const input = document.getElementById(`edit-opponent-${matchId}`);
+    const dropdown = document.getElementById(`edit-opponent-dropdown-${matchId}`);
 
-    if (!month || !day || !opponentName || !location) {
-        alert('All fields are required');
+    if (!input || !dropdown) return;
+
+    let selectedOptionIndex = -1;
+
+    // Show dropdown on focus
+    input.addEventListener('focus', () => {
+        showEditDropdownOptions(matchId, '');
+    });
+
+    // Filter options as user types
+    input.addEventListener('input', () => {
+        const filter = input.value.toLowerCase();
+        showEditDropdownOptions(matchId, filter);
+    });
+
+    // Handle keyboard navigation
+    input.addEventListener('keydown', (e) => {
+        const options = dropdown.querySelectorAll('.autocomplete-option');
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedOptionIndex = Math.min(selectedOptionIndex + 1, options.length - 1);
+            updateSelectedOption(options, selectedOptionIndex);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedOptionIndex = Math.max(selectedOptionIndex - 1, -1);
+            updateSelectedOption(options, selectedOptionIndex);
+        } else if (e.key === 'Enter' && selectedOptionIndex >= 0) {
+            e.preventDefault();
+            options[selectedOptionIndex].click();
+        } else if (e.key === 'Escape') {
+            dropdown.classList.remove('show');
+            selectedOptionIndex = -1;
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('show');
+            selectedOptionIndex = -1;
+        }
+    });
+}
+
+function showEditDropdownOptions(matchId, filter) {
+    const dropdown = document.getElementById(`edit-opponent-dropdown-${matchId}`);
+    if (!dropdown) return;
+
+    // Sort teams alphabetically by name
+    const sortedTeams = [...teamsData].sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    // Filter teams based on input
+    const filteredTeams = sortedTeams.filter(team =>
+        team.name.toLowerCase().includes(filter)
+    );
+
+    if (filteredTeams.length === 0) {
+        dropdown.classList.remove('show');
+        return;
+    }
+
+    dropdown.innerHTML = filteredTeams.map(team => `
+        <div class="autocomplete-option"
+             data-value="${team.name}"
+             data-team-id="${team.id}">
+            ${team.name}
+        </div>
+    `).join('');
+
+    // Add click handlers to options
+    dropdown.querySelectorAll('.autocomplete-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.getElementById(`edit-opponent-${matchId}`).value = option.dataset.value;
+            dropdown.classList.remove('show');
+        });
+    });
+
+    dropdown.classList.add('show');
+}
+
+function updateSelectedOption(options, selectedIndex) {
+    options.forEach((option, index) => {
+        if (index === selectedIndex) {
+            option.classList.add('selected');
+            option.scrollIntoView({ block: 'nearest' });
+        } else {
+            option.classList.remove('selected');
+        }
+    });
+}
+
+function saveMatchEdit(id) {
+    const opponent = document.getElementById(`edit-opponent-${id}`).value.trim();
+    const month = document.getElementById(`edit-month-${id}`).value;
+    const day = document.getElementById(`edit-day-${id}`).value;
+    const location = document.getElementById(`edit-location-${id}`).value.trim();
+
+    const errorSpan = document.getElementById(`edit-error-${id}`);
+
+    if (!opponent || !month || !day || !location) {
+        errorSpan.textContent = 'All fields are required';
+        errorSpan.style.color = '#f85149';
+        return;
+    }
+
+    // Validate month and day
+    const monthNum = parseInt(month);
+    const dayNum = parseInt(day);
+
+    if (monthNum < 1 || monthNum > 12) {
+        errorSpan.textContent = 'Month must be between 1 and 12';
+        errorSpan.style.color = '#f85149';
+        return;
+    }
+
+    if (dayNum < 1 || dayNum > 31) {
+        errorSpan.textContent = 'Day must be between 1 and 31';
+        errorSpan.style.color = '#f85149';
         return;
     }
 
@@ -200,36 +424,248 @@ function saveMatch(id) {
 
     // Find matching team
     const matchingTeam = teamsData.find(team =>
-        team.name.toLowerCase() === opponentName.toLowerCase()
+        team.name.toLowerCase() === opponent.toLowerCase()
     );
 
     const match = scheduleData.find(m => m.id === id);
     if (match) {
         match.date = dateString;
-        match.opponent = opponentName;
+        match.opponent = opponent;
         match.opponentTeamId = matchingTeam ? matchingTeam.id : null;
         match.location = location;
 
         scheduleData.sort((a, b) => new Date(a.date) - new Date(b.date));
         saveSchedule();
+
+        // Close panel
+        cancelMatchEdit(id);
+
+        // Re-render
         renderSchedule();
     }
 }
 
 function cancelMatchEdit(id) {
-    renderSchedule();
+    const editPanel = document.getElementById(`edit-panel-${id}`);
+    if (editPanel) {
+        editPanel.remove();
+    }
+
+    const matchCard = document.getElementById(`match-card-${id}`);
+    if (matchCard) {
+        matchCard.classList.remove('expanded');
+    }
+}
+
+// Inline Player Assignment Functions - Rewritten from scratch
+function showPlayerInput(matchId) {
+    console.log('showPlayerInput called for match:', matchId);
+
+    // Close any existing dropdowns first
+    closeAllPlayerInputs();
+
+    const match = scheduleData.find(m => m.id === matchId);
+    if (!match) return;
+
+    // Check max players
+    const assignedPlayers = match.assignedPlayers || [];
+    if (assignedPlayers.length >= 5) {
+        alert('Maximum 5 players per match');
+        return;
+    }
+
+    // Check if roster has players
+    if (playersData.length === 0) {
+        alert('Add players to your roster first');
+        return;
+    }
+
+    // Hide + button
+    const addBtn = document.getElementById(`add-btn-${matchId}`);
+    if (addBtn) {
+        addBtn.style.display = 'none';
+    }
+
+    // All players, sorted alphabetically
+    const allPlayers = [...playersData].sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    );
+
+    // Create dropdown and append to wrapper (not container)
+    const wrapper = document.getElementById(`add-wrapper-${matchId}`);
+    const dropdown = document.createElement('div');
+    dropdown.className = 'inline-player-dropdown';
+    dropdown.id = `player-dropdown-${matchId}`;
+    dropdown.innerHTML = allPlayers.map(player => `
+        <div class="inline-dropdown-option" data-player-id="${player.id}">
+            ${player.name}
+        </div>
+    `).join('');
+
+    wrapper.appendChild(dropdown);
+
+    // Add click handlers to each option
+    dropdown.querySelectorAll('.inline-dropdown-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const playerId = parseInt(option.dataset.playerId);
+            addPlayerToMatch(matchId, playerId);
+        });
+    });
+
+    // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', handleOutsideClick);
+    }, 0);
+}
+
+function handleOutsideClick(e) {
+    const dropdown = document.querySelector('.inline-player-dropdown');
+    if (dropdown && !dropdown.contains(e.target)) {
+        closeAllPlayerInputs();
+        document.removeEventListener('click', handleOutsideClick);
+    }
+}
+
+function closeAllPlayerInputs() {
+    // Remove all dropdowns
+    document.querySelectorAll('.inline-player-dropdown').forEach(d => d.remove());
+
+    // Show all + buttons
+    document.querySelectorAll('.add-player-btn').forEach(btn => {
+        btn.style.display = 'inline-block';
+    });
+
+    // Remove click listener
+    document.removeEventListener('click', handleOutsideClick);
+}
+
+function addPlayerToMatch(matchId, playerId) {
+    console.log('Adding player', playerId, 'to match', matchId);
+
+    const match = scheduleData.find(m => m.id === matchId);
+    if (!match) return;
+
+    // Initialize assignedPlayers if needed
+    if (!match.assignedPlayers) {
+        match.assignedPlayers = [];
+    }
+
+    // Check if player already assigned (prevent duplicates)
+    if (match.assignedPlayers.includes(playerId)) {
+        alert('Player already assigned to this match');
+        closeAllPlayerInputs();
+        return;
+    }
+
+    // Check max limit
+    if (match.assignedPlayers.length >= 5) {
+        alert('Maximum 5 players per match');
+        closeAllPlayerInputs();
+        return;
+    }
+
+    // Add player
+    match.assignedPlayers.push(playerId);
+
+    // Save to localStorage and debounced GitHub
+    saveSchedule();
+
+    // Close dropdown and update card
+    closeAllPlayerInputs();
+    updateMatchCardPlayers(matchId);
+}
+
+function showRemoveOption(matchId, playerId, event) {
+    event.stopPropagation();
+
+    const pill = event.currentTarget;
+
+    // Check if clicking on the X specifically
+    if (event.target.classList.contains('remove-x')) {
+        removePlayerFromMatch(matchId, playerId);
+        return;
+    }
+
+    // Toggle selection state
+    if (pill.classList.contains('removing')) {
+        // Deselect - remove X and green state
+        pill.classList.remove('removing');
+        const player = playersData.find(p => p.id === playerId);
+        if (player) {
+            pill.innerHTML = player.name;
+        }
+    } else {
+        // Remove 'removing' class from all other pills
+        document.querySelectorAll('.player-pill-removable').forEach(p => {
+            if (p !== pill) {
+                p.classList.remove('removing');
+                const otherId = parseInt(p.getAttribute('data-player-id'));
+                const otherPlayer = playersData.find(pl => pl.id === otherId);
+                if (otherPlayer) {
+                    p.innerHTML = otherPlayer.name;
+                }
+            }
+        });
+
+        // Select this pill - add X and green state
+        pill.classList.add('removing');
+        const player = playersData.find(p => p.id === playerId);
+        if (player) {
+            pill.innerHTML = `${player.name} <span class="remove-x">×</span>`;
+        }
+    }
+}
+
+function removePlayerFromMatch(matchId, playerId) {
+    const match = scheduleData.find(m => m.id === matchId);
+    if (!match) return;
+
+    // Remove player
+    match.assignedPlayers = (match.assignedPlayers || []).filter(id => id !== playerId);
+
+    // Save and update only this card (fast!)
+    saveSchedule();
+    updateMatchCardPlayers(matchId);
+}
+
+// Fast update - only refreshes player pills for one match card
+function updateMatchCardPlayers(matchId) {
+    const match = scheduleData.find(m => m.id === matchId);
+    if (!match) return;
+
+    const container = document.getElementById(`pills-container-${matchId}`);
+    if (!container) return;
+
+    // Filter out deleted players
+    const validAssignedPlayers = (match.assignedPlayers || []).filter(playerId =>
+        playersData.some(p => p.id === playerId)
+    );
+
+    // Build player pills HTML
+    const playerPills = validAssignedPlayers
+        .map(playerId => {
+            const player = playersData.find(p => p.id === playerId);
+            return player ? `<span class="player-pill-removable" data-player-id="${playerId}" onclick="showRemoveOption(${matchId}, ${playerId}, event)">${player.name}</span>` : '';
+        })
+        .filter(pill => pill !== '')
+        .join('');
+
+    // Update the container (keep the + button in wrapper)
+    container.innerHTML = `
+        ${playerPills}
+        <div class="add-player-wrapper" id="add-wrapper-${matchId}">
+            <button class="add-player-btn" onclick="showPlayerInput(${matchId})" id="add-btn-${matchId}">+</button>
+        </div>
+    `;
 }
 
 async function saveSchedule() {
-    // Save to localStorage as cache
+    // Save to localStorage immediately (fast)
     localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
 
-    // Save to GitHub
-    try {
-        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
-    } catch (error) {
-        console.error('Failed to save data to GitHub:', error);
-    }
+    // Debounce GitHub save (batches rapid changes)
+    debouncedGitHubSave(scheduleData, playersData, teamsData);
 }
 
 // Player Management
@@ -516,15 +952,11 @@ function cancelEdit(id) {
 }
 
 async function savePlayers() {
-    // Save to localStorage as cache
+    // Save to localStorage immediately (fast)
     localStorage.setItem('playersData', JSON.stringify(playersData));
 
-    // Save to GitHub
-    try {
-        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
-    } catch (error) {
-        console.error('Failed to save data to GitHub:', error);
-    }
+    // Debounce GitHub save (batches rapid changes)
+    debouncedGitHubSave(scheduleData, playersData, teamsData);
 }
 
 // CSV Import/Export Functions
@@ -711,15 +1143,11 @@ function cancelTeamEdit(id) {
 }
 
 async function saveTeams() {
-    // Save to localStorage as cache
+    // Save to localStorage immediately (fast)
     localStorage.setItem('teamsData', JSON.stringify(teamsData));
 
-    // Save to GitHub
-    try {
-        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
-    } catch (error) {
-        console.error('Failed to save data to GitHub:', error);
-    }
+    // Debounce GitHub save (batches rapid changes)
+    debouncedGitHubSave(scheduleData, playersData, teamsData);
 }
 
 // Custom Autocomplete for Opponent Team
@@ -901,6 +1329,13 @@ async function initializeApp() {
     if (loadingIndicator) {
         loadingIndicator.style.display = 'none';
     }
+
+    // Data migration - ensure all matches have assignedPlayers field
+    scheduleData.forEach(match => {
+        if (!match.assignedPlayers) {
+            match.assignedPlayers = [];
+        }
+    });
 
     // Render initial UI
     renderSchedule();

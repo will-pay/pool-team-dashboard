@@ -376,6 +376,229 @@ button.cancel:hover {
     box-shadow: none;
 }
 
+/* Player Assignment Styles */
+.player-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.player-badge.player-full {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.player-badge.player-full:hover {
+    background: rgba(63, 185, 80, 0.25);
+}
+
+.player-badge.player-partial {
+    background: rgba(187, 128, 9, 0.15);
+    color: #d29922;
+    border-color: rgba(187, 128, 9, 0.3);
+}
+
+.player-badge.player-partial:hover {
+    background: rgba(187, 128, 9, 0.25);
+}
+
+.assign-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.assign-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: none;
+    box-shadow: none;
+}
+
+.assignment-panel-container,
+.edit-panel-container {
+    margin-bottom: 16px;
+}
+
+.assignment-panel {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px;
+    animation: slideDown 0.2s ease;
+}
+
+.edit-form {
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.autocomplete-wrapper-edit {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-wrapper-edit input {
+    width: 100%;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.assignment-header {
+    margin-bottom: 12px;
+}
+
+.assignment-header h4 {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.player-list {
+    margin-bottom: 16px;
+    padding: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.player-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid transparent;
+    user-select: none;
+}
+
+.player-row:hover {
+    background: var(--bg-hover);
+    border-color: var(--border);
+}
+
+.player-row.selected {
+    border-color: var(--accent);
+}
+
+.player-row.selected:hover {
+    background: var(--bg-hover);
+}
+
+.player-name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.player-sl {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 400;
+    text-align: right;
+    min-width: 50px;
+}
+
+.player-ppm {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 400;
+    text-align: right;
+    min-width: 70px;
+}
+
+.assignment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.selection-counter {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+}
+
+.match-card.expanded {
+    border-color: var(--accent);
+}
+
 .icon-btn {
     background: none;
     border: 1px solid transparent;
@@ -649,56 +872,232 @@ input[type="file"]::file-selector-button:hover {
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* ===== SCHEDULE TABLE COLUMN WIDTHS ===== */
-/* Make schedule table only as wide as needed */
-#schedule-table {
-    width: auto;
+/* ===== MATCH CARDS LAYOUT ===== */
+#schedule-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* Date column - fits "12/31" */
-#schedule-table th:nth-child(1),
-#schedule-table td:nth-child(1) {
-    width: 1px;
+.match-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.match-card:hover {
+    border-color: var(--text-tertiary);
+}
+
+.match-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.rank-badge-card {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid var(--border);
+}
+
+.match-menu {
+    position: relative;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.menu-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    transform: none;
+    box-shadow: none;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    display: none;
+    flex-direction: column;
+    min-width: 120px;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.menu-dropdown.show {
+    display: flex;
+}
+
+.menu-dropdown button {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-bottom: 1px solid var(--border-muted);
+}
+
+.menu-dropdown button:last-child {
+    border-bottom: none;
+}
+
+.menu-dropdown button:hover {
+    background: var(--bg-hover);
+    transform: none;
+    box-shadow: none;
+}
+
+.opponent-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
+}
+
+.match-info {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.player-pills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.player-pill-removable {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border: 1.5px solid var(--text-secondary);
+    border-radius: 20px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
     white-space: nowrap;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+    line-height: 1;
 }
 
-/* Rank column - fits "#15" */
-#schedule-table th:nth-child(2),
-#schedule-table td:nth-child(2) {
-    width: 1px;
+.player-pill-removable:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.player-pill-removable.removing {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+
+.remove-x {
+    margin-left: 6px;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.add-player-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.add-player-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 20px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 32px;
     text-align: center;
-    white-space: nowrap;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
 }
 
-/* Opponent column - fits content */
-#schedule-table th:nth-child(3),
-#schedule-table td:nth-child(3) {
-    width: 1px;
-    white-space: nowrap;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+.add-player-btn:hover {
+    background: var(--accent-muted);
+    transform: none;
+    box-shadow: none;
 }
 
-/* Location column - fits content */
-#schedule-table th:nth-child(4),
-#schedule-table td:nth-child(4) {
-    width: 1px;
-    white-space: nowrap;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+.inline-player-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    min-width: 180px;
+    animation: dropdownSlideIn 0.15s ease;
 }
 
-/* Actions column - fits two icon buttons */
-#schedule-table th:nth-child(5),
-#schedule-table td:nth-child(5) {
-    width: 1px;
-    white-space: nowrap;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inline-dropdown-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.15s ease;
+    border-bottom: 1px solid var(--border-muted);
+    font-size: 13px;
+}
+
+.inline-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.inline-dropdown-option:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
 }
 
 /* ===== ROSTER TABLE COLUMN WIDTHS ===== */
