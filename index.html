@@ -12,6 +12,11 @@
             <h1>🎱 Sticks & Stoned Dashboard</h1>
         </header>
 
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" style="display: none; text-align: center; padding: 20px; font-size: 16px; color: #666;">
+            Loading data...
+        </div>
+
         <nav class="tabs">
             <button class="tab-button active" data-tab="schedule">Schedule</button>
             <button class="tab-button" data-tab="my-team">Roster</button>
@@ -114,6 +119,10 @@
         </div>
     </div>
 
+    <!-- GitHub Sync Module -->
+    <script src="github-sync.js"></script>
+
+    <!-- Application Script -->
     <script src="script.js"></script>
 </body>
 </html>

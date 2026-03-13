@@ -5,21 +5,10 @@ const defaultData = {
     teamsData: [{"id":1773117849067,"name":"H8 it or love it","points":88},{"id":1773117860325,"name":"Gently, pool out","points":87},{"id":1773117867120,"name":"Rack ball","points":85},{"id":1773117873962,"name":"The Enablers","points":78},{"id":1773117879883,"name":"Beer in Hand","points":74},{"id":1773117890625,"name":"Cutie Pies","points":74},{"id":1773117902166,"name":"The Crazy 8's","points":68},{"id":1773117912783,"name":"Barracuedas","points":66},{"id":1773118117955,"name":"Bank you baby","points":66},{"id":1773117803699,"name":"Sticks & Stoned","points":65},{"id":1773117919979,"name":"Gimme A Break","points":64},{"id":1773117926953,"name":"Pool Clurb","points":57},{"id":1773117932949,"name":"Off The Rails","points":56},{"id":1773117939920,"name":"Top Corner, Lovely","points":48},{"id":1773117946061,"name":"8 Ball Yips","points":43},{"id":1773117951936,"name":"8 Balls Deep","points":22}]
 };
 
-// Initialize localStorage with default data if empty
-if (!localStorage.getItem('scheduleData')) {
-    localStorage.setItem('scheduleData', JSON.stringify(defaultData.scheduleData));
-}
-if (!localStorage.getItem('playersData')) {
-    localStorage.setItem('playersData', JSON.stringify(defaultData.playersData));
-}
-if (!localStorage.getItem('teamsData')) {
-    localStorage.setItem('teamsData', JSON.stringify(defaultData.teamsData));
-}
-
-// Data Storage
-let scheduleData = JSON.parse(localStorage.getItem('scheduleData')) || [];
-let playersData = JSON.parse(localStorage.getItem('playersData')) || [];
-let teamsData = JSON.parse(localStorage.getItem('teamsData')) || [];
+// Data Storage (will be loaded from GitHub)
+let scheduleData = [];
+let playersData = [];
+let teamsData = [];
 
 // Sorting state
 let currentSort = { column: 'avgPPM', direction: 'desc' };
@@ -231,8 +220,16 @@ function cancelMatchEdit(id) {
     renderSchedule();
 }
 
-function saveSchedule() {
+async function saveSchedule() {
+    // Save to localStorage as cache
     localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+
+    // Save to GitHub
+    try {
+        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+    } catch (error) {
+        console.error('Failed to save data to GitHub:', error);
+    }
 }
 
 // Player Management
@@ -518,8 +515,16 @@ function cancelEdit(id) {
     renderPlayers();
 }
 
-function savePlayers() {
+async function savePlayers() {
+    // Save to localStorage as cache
     localStorage.setItem('playersData', JSON.stringify(playersData));
+
+    // Save to GitHub
+    try {
+        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+    } catch (error) {
+        console.error('Failed to save data to GitHub:', error);
+    }
 }
 
 // CSV Import/Export Functions
@@ -705,8 +710,16 @@ function cancelTeamEdit(id) {
     renderTeams();
 }
 
-function saveTeams() {
+async function saveTeams() {
+    // Save to localStorage as cache
     localStorage.setItem('teamsData', JSON.stringify(teamsData));
+
+    // Save to GitHub
+    try {
+        await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+    } catch (error) {
+        console.error('Failed to save data to GitHub:', error);
+    }
 }
 
 // Custom Autocomplete for Opponent Team
@@ -811,8 +824,96 @@ function updateSelectedOption(options) {
     });
 }
 
-// Initial Render
-renderSchedule();
-renderPlayers();
-renderTeams();
-setupAutocomplete();
+// Initial Data Load and Render
+async function initializeApp() {
+    console.log('Initializing app...');
+
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'block';
+    }
+
+    // Initialize GitHub API
+    await initializeGitHub();
+
+    try {
+        // Try to load from GitHub first
+        const githubData = await loadDataFromGitHub();
+
+        if (githubData) {
+            // Data exists in GitHub
+            scheduleData = githubData.scheduleData || [];
+            playersData = githubData.playersData || [];
+            teamsData = githubData.teamsData || [];
+            console.log('Data loaded from GitHub');
+
+            // Save to localStorage as cache
+            localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+            localStorage.setItem('playersData', JSON.stringify(playersData));
+            localStorage.setItem('teamsData', JSON.stringify(teamsData));
+        } else {
+            // No data in GitHub, try localStorage
+            const localSchedule = localStorage.getItem('scheduleData');
+            const localPlayers = localStorage.getItem('playersData');
+            const localTeams = localStorage.getItem('teamsData');
+
+            if (localSchedule || localPlayers || localTeams) {
+                // Load from localStorage
+                scheduleData = localSchedule ? JSON.parse(localSchedule) : defaultData.scheduleData;
+                playersData = localPlayers ? JSON.parse(localPlayers) : defaultData.playersData;
+                teamsData = localTeams ? JSON.parse(localTeams) : defaultData.teamsData;
+                console.log('Data loaded from localStorage, saving to GitHub...');
+
+                // Save to GitHub
+                await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+            } else {
+                // No data anywhere, use defaults
+                scheduleData = defaultData.scheduleData;
+                playersData = defaultData.playersData;
+                teamsData = defaultData.teamsData;
+                console.log('Using default data, saving to GitHub...');
+
+                // Save to GitHub
+                await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+
+                // Save to localStorage as cache
+                localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+                localStorage.setItem('playersData', JSON.stringify(playersData));
+                localStorage.setItem('teamsData', JSON.stringify(teamsData));
+            }
+        }
+    } catch (error) {
+        console.error('Error loading from GitHub, falling back to localStorage:', error);
+
+        // Fall back to localStorage
+        scheduleData = JSON.parse(localStorage.getItem('scheduleData') || 'null') || defaultData.scheduleData;
+        playersData = JSON.parse(localStorage.getItem('playersData') || 'null') || defaultData.playersData;
+        teamsData = JSON.parse(localStorage.getItem('teamsData') || 'null') || defaultData.teamsData;
+
+        // Save to localStorage
+        localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
+        localStorage.setItem('playersData', JSON.stringify(playersData));
+        localStorage.setItem('teamsData', JSON.stringify(teamsData));
+    }
+
+    // Hide loading indicator
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
+
+    // Render initial UI
+    renderSchedule();
+    renderPlayers();
+    renderTeams();
+    setupAutocomplete();
+
+    console.log('App initialized successfully');
+}
+
+// Initialize the app when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
