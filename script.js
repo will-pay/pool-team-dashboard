@@ -5,7 +5,7 @@ const defaultData = {
     teamsData: [{"id":1773117849067,"name":"H8 it or love it","points":88},{"id":1773117860325,"name":"Gently, pool out","points":87},{"id":1773117867120,"name":"Rack ball","points":85},{"id":1773117873962,"name":"The Enablers","points":78},{"id":1773117879883,"name":"Beer in Hand","points":74},{"id":1773117890625,"name":"Cutie Pies","points":74},{"id":1773117902166,"name":"The Crazy 8's","points":68},{"id":1773117912783,"name":"Barracuedas","points":66},{"id":1773118117955,"name":"Bank you baby","points":66},{"id":1773117803699,"name":"Sticks & Stoned","points":65},{"id":1773117919979,"name":"Gimme A Break","points":64},{"id":1773117926953,"name":"Pool Clurb","points":57},{"id":1773117932949,"name":"Off The Rails","points":56},{"id":1773117939920,"name":"Top Corner, Lovely","points":48},{"id":1773117946061,"name":"8 Ball Yips","points":43},{"id":1773117951936,"name":"8 Balls Deep","points":22}]
 };
 
-// Data Storage (will be loaded from GitHub)
+// Data Storage (will be loaded from Google Sheets)
 let scheduleData = [];
 let playersData = [];
 let teamsData = [];
@@ -13,24 +13,24 @@ let teamsData = [];
 // Sorting state
 let currentSort = { column: 'avgPPM', direction: 'desc' };
 
-// Debounce timer for GitHub saves
-let githubSaveTimer = null;
+// Debounce timer for Google Sheets saves
+let sheetsSaveTimer = null;
 
 // Debounce function - delays execution until after wait time has elapsed since last call
 function debounce(func, wait) {
     return function executedFunction(...args) {
-        clearTimeout(githubSaveTimer);
-        githubSaveTimer = setTimeout(() => func(...args), wait);
+        clearTimeout(sheetsSaveTimer);
+        sheetsSaveTimer = setTimeout(() => func(...args), wait);
     };
 }
 
-// Debounced GitHub save function (1.5 second delay)
-const debouncedGitHubSave = debounce(async (schedule, players, teams) => {
+// Debounced Google Sheets save function (1.5 second delay)
+const debouncedSheetsSave = debounce(async (schedule, players, teams) => {
     try {
-        await saveAllDataToGitHub(schedule, players, teams);
-        console.log('Changes synced to GitHub');
+        await saveAllDataToGoogleSheets(schedule, players, teams);
+        console.log('Changes synced to Google Sheets');
     } catch (error) {
-        console.error('Failed to save data to GitHub:', error);
+        console.error('Failed to save data to Google Sheets:', error);
     }
 }, 1500);
 
@@ -664,8 +664,8 @@ async function saveSchedule() {
     // Save to localStorage immediately (fast)
     localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
 
-    // Debounce GitHub save (batches rapid changes)
-    debouncedGitHubSave(scheduleData, playersData, teamsData);
+    // Debounce Google Sheets save (batches rapid changes)
+    debouncedSheetsSave(scheduleData, playersData, teamsData);
 }
 
 // Player Management
@@ -955,8 +955,8 @@ async function savePlayers() {
     // Save to localStorage immediately (fast)
     localStorage.setItem('playersData', JSON.stringify(playersData));
 
-    // Debounce GitHub save (batches rapid changes)
-    debouncedGitHubSave(scheduleData, playersData, teamsData);
+    // Debounce Google Sheets save (batches rapid changes)
+    debouncedSheetsSave(scheduleData, playersData, teamsData);
 }
 
 // CSV Import/Export Functions
@@ -1146,8 +1146,8 @@ async function saveTeams() {
     // Save to localStorage immediately (fast)
     localStorage.setItem('teamsData', JSON.stringify(teamsData));
 
-    // Debounce GitHub save (batches rapid changes)
-    debouncedGitHubSave(scheduleData, playersData, teamsData);
+    // Debounce Google Sheets save (batches rapid changes)
+    debouncedSheetsSave(scheduleData, playersData, teamsData);
 }
 
 // Custom Autocomplete for Opponent Team
@@ -1262,26 +1262,26 @@ async function initializeApp() {
         loadingIndicator.style.display = 'block';
     }
 
-    // Initialize GitHub API
-    await initializeGitHub();
+    // Initialize Google Sheets API
+    await initializeGoogleSheets();
 
     try {
-        // Try to load from GitHub first
-        const githubData = await loadDataFromGitHub();
+        // Try to load from Google Sheets first
+        const sheetsData = await loadDataFromGoogleSheets();
 
-        if (githubData) {
-            // Data exists in GitHub
-            scheduleData = githubData.scheduleData || [];
-            playersData = githubData.playersData || [];
-            teamsData = githubData.teamsData || [];
-            console.log('Data loaded from GitHub');
+        if (sheetsData) {
+            // Data exists in Google Sheets
+            scheduleData = sheetsData.scheduleData || [];
+            playersData = sheetsData.playersData || [];
+            teamsData = sheetsData.teamsData || [];
+            console.log('Data loaded from Google Sheets');
 
             // Save to localStorage as cache
             localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
             localStorage.setItem('playersData', JSON.stringify(playersData));
             localStorage.setItem('teamsData', JSON.stringify(teamsData));
         } else {
-            // No data in GitHub, try localStorage
+            // No data in Google Sheets, try localStorage
             const localSchedule = localStorage.getItem('scheduleData');
             const localPlayers = localStorage.getItem('playersData');
             const localTeams = localStorage.getItem('teamsData');
@@ -1291,19 +1291,19 @@ async function initializeApp() {
                 scheduleData = localSchedule ? JSON.parse(localSchedule) : defaultData.scheduleData;
                 playersData = localPlayers ? JSON.parse(localPlayers) : defaultData.playersData;
                 teamsData = localTeams ? JSON.parse(localTeams) : defaultData.teamsData;
-                console.log('Data loaded from localStorage, saving to GitHub...');
+                console.log('Data loaded from localStorage, saving to Google Sheets...');
 
-                // Save to GitHub
-                await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+                // Save to Google Sheets
+                await saveAllDataToGoogleSheets(scheduleData, playersData, teamsData);
             } else {
                 // No data anywhere, use defaults
                 scheduleData = defaultData.scheduleData;
                 playersData = defaultData.playersData;
                 teamsData = defaultData.teamsData;
-                console.log('Using default data, saving to GitHub...');
+                console.log('Using default data, saving to Google Sheets...');
 
-                // Save to GitHub
-                await saveAllDataToGitHub(scheduleData, playersData, teamsData);
+                // Save to Google Sheets
+                await saveAllDataToGoogleSheets(scheduleData, playersData, teamsData);
 
                 // Save to localStorage as cache
                 localStorage.setItem('scheduleData', JSON.stringify(scheduleData));
@@ -1312,7 +1312,7 @@ async function initializeApp() {
             }
         }
     } catch (error) {
-        console.error('Error loading from GitHub, falling back to localStorage:', error);
+        console.error('Error loading from Google Sheets, falling back to localStorage:', error);
 
         // Fall back to localStorage
         scheduleData = JSON.parse(localStorage.getItem('scheduleData') || 'null') || defaultData.scheduleData;
