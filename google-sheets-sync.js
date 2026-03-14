@@ -3,7 +3,7 @@
 const GOOGLE_SHEETS_CONFIG = {
     // Paste your Google Apps Script Web App URL here
     // It looks like: https://script.google.com/macros/s/AKfycby.../exec
-    apiUrl: 'https://script.google.com/macros/s/AKfycbwpppFwswW8irB_DmNpD7b7CxWMOUC8zo1lr9LVFxeBklaJukLM898rm_dw7g3NPxE6/exec'
+    apiUrl: 'https://script.google.com/macros/s/AKfycbyvW4a1DgnyitD3JPdxhmyeEAHNVYERp_XwqmYJwP7hPB15DiYk550B6wbsYHu36bGZyA/exec'
 };
 
 // Track if Google Sheets sync is ready
